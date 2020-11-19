@@ -24,12 +24,18 @@ pub struct PathSaver {
 impl PathSaver {
 
     pub fn new(file_name: String, fixed_frame_id: &str) -> Result<Self> {
+
         let _ = File::create(&file_name)?;
         let mut s = Self {
             path: Path::default(),
             file_name,
         };
+
         s.path.header.frame_id = fixed_frame_id.to_string();
+
+        // Add starting point of (0,0)
+        s.add_point_stamped(PointStamped::default());
+
         Ok(s)
     }
 
@@ -52,11 +58,19 @@ impl PathSaver {
 
         self.path.poses.push(p)
     }
+
+    pub fn get_path(&self) -> &Path {
+        &self.path
+    }
 }
 
 
 impl Drop for PathSaver {
     fn drop(&mut self) {
+        // Add end point as 0,0
+        self.add_point_stamped(PointStamped::default());
+
+        rosrust::ros_info!("Saving to file: {}", self.file_name);
         self.save().unwrap()
     }
 }

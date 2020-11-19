@@ -26,21 +26,38 @@ use path::{PathSaver, PathServer};
 
 pub fn run_saver() -> Result<()> {
 
+    // Parameters and arguments
     let file_name = get_file_name()?;
-    
-    let saver = PathSaver::new(file_name, "map")?;
-    let saver = Arc::new(Mutex::new(saver));
+    let rate = rosrust::param("~rate").unwrap().get().unwrap_or(6.0);
+    rosrust::ros_info!("File to save to: {}", file_name);
+
+    // Setup
+    let saver0 = PathSaver::new(file_name, "map")?;
+    let saver0 = Arc::new(Mutex::new(saver0));
+    let saver1 = saver0.clone();
+
+    let path_pub = rosrust::publish("/path", 100)?;
 
     let _s = rosrust::subscribe(
         "/clicked_point",
         100,
         move |p: PointStamped| {
             rosrust::ros_info!("New point: ({}, {})", p.point.x, p.point.y);
-            saver.lock().unwrap().add_point_stamped(p)
+            saver0.lock().unwrap().add_point_stamped(p)
         }
     );
 
-    rosrust::spin();
+    rosrust::ros_info!("Listening for points on /clicked_point");
+    rosrust::ros_info!("Publishing path on /path");
+
+    // Loop
+    let rate = rosrust::rate(rate);
+    while rosrust::is_ok() {
+        let saver = saver1.lock().unwrap();
+        let path = saver.get_path();
+        path_pub.send(path.clone())?;
+        rate.sleep();
+    }
 
     Ok(())
 }
@@ -48,11 +65,16 @@ pub fn run_saver() -> Result<()> {
 
 pub fn run_server() -> Result<()> {
 
-    // Setup
+    // Parameters and arguments
     let file_name = get_file_name()?;
     let rate = rosrust::param("~rate").unwrap().get().unwrap_or(6.0);
+    rosrust::ros_info!("Opening file: {}", file_name);
+
+    // Setup
     let server = PathServer::load(file_name)?;
     let path_pub = rosrust::publish("/path", 100)?;
+
+    rosrust::ros_info!("Publishing path on /path");
 
     // Loop
     let rate = rosrust::rate(rate);
