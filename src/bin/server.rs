@@ -1,7 +1,7 @@
 /* Copyright (C) 2020 Dylan Staatz - All Rights Reserved. */
 
 
-use tiger_path_server::*;
+use tiger_path_server::run_server;
 
 
 fn main() {
@@ -22,7 +22,7 @@ fn main() {
         return
     }
 
-    if let Err(ref e) = run() {
+    if let Err(ref e) = run_server() {
 
         rosrust::ros_err!("error: {}", e);
 
