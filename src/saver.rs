@@ -2,16 +2,14 @@
 
 
 use std::fs::File;
-// use std::io::{Read, Write};
 
 use serde_json;
 
-// use rosrust_msg::std_msgs::Header;
 use rosrust_msg::geometry_msgs::{PointStamped, Quaternion, Pose, PoseStamped};
 use rosrust_msg::nav_msgs::Path;
 
 use crate::errors::*;
-use crate::serde::{PathSerializer, PathDeserializer};
+use crate::serde::PathSerializer;
 
 
 #[derive(Debug)]
@@ -72,26 +70,6 @@ impl Drop for PathSaver {
 
         rosrust::ros_info!("Saving to file: {}", self.file_name);
         self.save().unwrap()
-    }
-}
-
-
-#[derive(Debug)]
-pub struct PathServer {
-    path: Path,
-}
-
-
-impl PathServer {
-
-    pub fn load<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
-        let file = File::open(path)?;
-        let path: Path = serde_json::from_reader(file).map(|PathDeserializer(path)| path)?;
-        Ok(Self { path })
-    }
-
-    pub fn get_path(&self) -> &Path {
-        &self.path
     }
 }
 

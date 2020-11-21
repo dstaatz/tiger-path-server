@@ -9,7 +9,8 @@ extern crate error_chain;
 
 mod errors;
 mod serde;
-mod path;
+mod saver;
+mod server;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +23,8 @@ use rosrust_msg::geometry_msgs::PointStamped;
 use rosrust_msg::nav_msgs::{GetPlan, GetPlanRes};
 
 use errors::*;
-use path::{PathSaver, PathServer};
+use saver::PathSaver;
+use server::PathServer;
 
 
 pub fn run_saver() -> Result<()> {
