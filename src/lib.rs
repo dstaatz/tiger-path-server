@@ -104,6 +104,49 @@ pub fn run_server() -> Result<()> {
     Ok(())
 }
 
+use std::f64::consts::PI;
+const TWO_PI: f64 = 2.0*PI;
+
+pub fn gen_circle() -> Result<()> {
+    
+    // Parameters and arguments
+    let file_name = get_file_name()?;
+    rosrust::ros_info!("Opening file: {}", file_name);
+    rosrust::ros_info!("Generating circle");
+
+    let center = (-0.2, -0.9);
+    let num_points = 100.0;
+    let delta_theta = (TWO_PI - 0.1) / num_points;
+    let radius = 0.9;
+    let mut p = PathSaver::new(file_name, "map")?;
+
+    let mut theta = PI / 2.0;
+
+    for i in 0..(num_points as usize) {
+        theta = add_theta(theta, delta_theta);
+        let x = radius*f64::cos(theta);
+        let y = radius*f64::sin(theta);
+        p.add_point_simple((x + center.0, y + center.1));
+        if i > 10 && i-10 > (num_points as usize) / 2 && theta > PI / 2.0 {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
+fn add_theta(t1: f64, t2: f64) -> f64 {
+    let mut ans = t1 + t2;
+    while ans > PI { ans = ans - TWO_PI; }
+    while ans < -PI { ans = ans + TWO_PI; }
+    ans
+}
+
+/// Calculate the euclidean distance between two arbitrary points
+fn distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
+    f64::sqrt((p2.0 - p1.0).powi(2) + (p2.1 - p1.1).powi(2))
+}
+
 
 fn get_file_name() -> Result<String> {
 

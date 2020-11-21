@@ -5,7 +5,8 @@ use std::fs::File;
 
 use serde_json;
 
-use rosrust_msg::geometry_msgs::{PointStamped, Quaternion, Pose, PoseStamped};
+use rosrust_msg::std_msgs::Header;
+use rosrust_msg::geometry_msgs::{Point, PointStamped, Quaternion, Pose, PoseStamped};
 use rosrust_msg::nav_msgs::Path;
 
 use crate::errors::*;
@@ -52,6 +53,27 @@ impl PathSaver {
             header: p.header,
             pose: Pose {
                 position: p.point,
+                orientation: Quaternion::default(),
+            },
+        };
+
+        self.path.poses.push(p)
+    }
+
+    pub fn add_point_simple(&mut self, p: (f64, f64)) {
+
+        let mut h = Header::default();
+        h.frame_id = self.path.header.frame_id.clone();
+
+        // Store point in a Pose
+        let p = PoseStamped {
+            header: h,
+            pose: Pose {
+                position: Point {
+                    x: p.0,
+                    y: p.1,
+                    z: 0.0,
+                },
                 orientation: Quaternion::default(),
             },
         };
