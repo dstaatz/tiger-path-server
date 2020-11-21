@@ -19,6 +19,7 @@ use std::env;
 use std::sync::{Arc, Mutex};
 
 use rosrust_msg::geometry_msgs::PointStamped;
+use rosrust_msg::nav_msgs::{GetPlan, GetPlanRes};
 
 use errors::*;
 use path::{PathSaver, PathServer};
@@ -71,14 +72,28 @@ pub fn run_server() -> Result<()> {
     rosrust::ros_info!("Opening file: {}", file_name);
 
     // Setup
-    let server = PathServer::load(file_name)?;
+    let server0 = PathServer::load(file_name)?;
+    let server0 = Arc::new(Mutex::new(server0));
+    let server1 = server0.clone();
     let path_pub = rosrust::publish("/path", 100)?;
+
+    rosrust::ros_info!("Hosting /static_path service");
+
+    let _service = rosrust::service::<GetPlan, _>(
+        "static_path",
+        move |_| {
+            rosrust::ros_info!("Returning path on static_path service");
+            let path = server0.lock().unwrap().get_path().clone();
+            Ok(GetPlanRes { plan: path })
+        }
+    )?;
 
     rosrust::ros_info!("Publishing path on /path");
 
     // Loop
     let rate = rosrust::rate(rate);
     while rosrust::is_ok() {
+        let server = server1.lock().unwrap();
         let path = server.get_path();
         path_pub.send(path.clone())?;
         rate.sleep();
