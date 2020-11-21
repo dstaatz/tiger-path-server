@@ -32,7 +32,9 @@ impl PathSaver {
         s.path.header.frame_id = fixed_frame_id.to_string();
 
         // Add starting point of (0,0)
-        s.add_point_stamped(PointStamped::default());
+        let mut p = PointStamped::default();
+        p.header.frame_id = fixed_frame_id.to_string();
+        s.add_point_stamped(p);
 
         Ok(s)
     }
@@ -65,9 +67,6 @@ impl PathSaver {
 
 impl Drop for PathSaver {
     fn drop(&mut self) {
-        // Add end point as 0,0
-        self.add_point_stamped(PointStamped::default());
-
         rosrust::ros_info!("Saving to file: {}", self.file_name);
         self.save().unwrap()
     }
