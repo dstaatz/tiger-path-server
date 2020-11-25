@@ -1,6 +1,6 @@
 # tiger-path-server
 
-This package supports 3 different utilities.
+This package supports 3 different utilities for the emerald-tiger project.
 
 ## saver
 This utility is an ROS node that lets you create manual paths based on clicking points in rviz. The path is saved to the given file on shutdown. Run with the following command:
